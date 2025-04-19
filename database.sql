@@ -19,14 +19,13 @@ CREATE TABLE items (
     FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE CASCADE
 );
 
-
-INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');
-INSERT INTO users (username, password, role) VALUES ('user', 'user123', 'user');
-
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_name VARCHAR(255) NOT NULL
 );
+
+INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');
+INSERT INTO users (username, password, role) VALUES ('user', 'user123', 'user');
 
 INSERT INTO categories (category_name) VALUES
 ('Finished Goods'),
