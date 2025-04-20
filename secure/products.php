@@ -12,11 +12,17 @@ include 'sidebar.php';
 // Search functionality
 $search_term = '';
 if(isset($_GET['search'])) {
-    $search_term = $_GET['search'];
-    // No sanitization here, making it vulnerable to XSS
-    $search_query = "SELECT * FROM items WHERE title LIKE '%$search_term%' OR category LIKE '%$search_term%'";
+    $search_term = mysqli_real_escape_string($conn, $_GET['search']);
+    
+    // Using prepared statement for search
+    $search_query = $conn->prepare("SELECT * FROM items WHERE title LIKE ? OR category LIKE ?");
+    $search_param = "%$search_term%";
+    $search_query->bind_param("ss", $search_param, $search_param);
+    $search_query->execute();
+    $result = $search_query->get_result();
 } else {
-    $search_query = "SELECT * FROM items";
+    // No search, get all items
+    $result = mysqli_query($conn, "SELECT * FROM items");
 }
 ?>
 
@@ -29,19 +35,19 @@ if(isset($_GET['search'])) {
 
         <div class="user">
             <i class="fas fa-user-circle"></i>
-            <span><?php echo $_SESSION['username']; ?></span>
+            <span><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
     </div>
 
     <div class="search-container">
         <form method="GET" action="">
-            <input type="text" name="search" placeholder="Search products..." value="<?php echo $search_term; ?>">
+            <input type="text" name="search" placeholder="Search products..." value="<?php echo htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8'); ?>">
             <button type="submit"><i class="fas fa-search"></i> Search</button>
         </form>
         
         <?php if($search_term): ?>
         <div class="search-info">
-            Search results for: <?php echo $search_term; ?>
+            Search results for: <?php echo htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8'); ?>
             <a href="products.php">[Clear]</a>
         </div>
         <?php endif; ?>
@@ -50,8 +56,6 @@ if(isset($_GET['search'])) {
     <div class="table-container">
         <h2>Products</h2>
         <?php
-        $result = mysqli_query($conn, $search_query);
-
         if (mysqli_num_rows($result) > 0) {
             echo "<table>
             <tr>
@@ -71,13 +75,13 @@ if(isset($_GET['search'])) {
 
                 echo "<tr>
                 <td>{$i}</td>
-                <td>{$row['title']}</td>
-                <td>{$row['category']}</td>
-                <td>{$row['stock']}</td>
-                <td>₹{$row['buying_price']}</td>
-                <td>₹{$row['selling_price']}</td>
+                <td>" . htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8') . "</td>
+                <td>" . htmlspecialchars($row['category'], ENT_QUOTES, 'UTF-8') . "</td>
+                <td>" . htmlspecialchars($row['stock'], ENT_QUOTES, 'UTF-8') . "</td>
+                <td>₹" . htmlspecialchars($row['buying_price'], ENT_QUOTES, 'UTF-8') . "</td>
+                <td>₹" . htmlspecialchars($row['selling_price'], ENT_QUOTES, 'UTF-8') . "</td>
                 <td class='action-column'>
-                    <a href='delete_product.php?id={$row['id']}' class='action-btn delete-btn' onclick='return confirm(\"Are you sure?\");'>
+                    <a href='delete_product.php?id=" . (int)$row['id'] . "' class='action-btn delete-btn' onclick='return confirm(\"Are you sure?\");'>
                         <i class='fas fa-trash'></i>
                     </a>
                 </td>

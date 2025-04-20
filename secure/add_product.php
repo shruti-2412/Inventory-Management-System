@@ -7,11 +7,15 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Get the logged-in user's ID
 $username = $_SESSION['username'];
-$user_query = mysqli_query($conn, "SELECT id FROM users WHERE username='$username'");
-$user_data = mysqli_fetch_assoc($user_query);
+// Using prepared statement to prevent SQL injection
+$stmt = $conn->prepare("SELECT id FROM users WHERE username=?");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$user_query = $stmt->get_result();
+$user_data = $user_query->fetch_assoc();
 $added_by = $user_data['id'];
+$stmt->close();
 
 // Fetch categories from DB
 $categories = mysqli_query($conn, "SELECT * FROM categories");
@@ -20,20 +24,23 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $title = $_POST['title'];
-    $category = $_POST['category'];
-    $stock = $_POST['stock'];
-    $buy = $_POST['buy'];
-    $sell = $_POST['sell'];
+    $title = mysqli_real_escape_string($conn, $_POST['title']);
+    $category = mysqli_real_escape_string($conn, $_POST['category']);
+    $stock = (int)$_POST['stock'];
+    $buy = (float)$_POST['buy'];
+    $sell = (float)$_POST['sell'];
 
-    $sql = "INSERT INTO items (title, category, stock, buying_price, selling_price, added_by) 
-            VALUES ('$title', '$category', '$stock', '$buy', '$sell', '$added_by')";
-
-    if (mysqli_query($conn, $sql)) {
+    // Using prepared statement for insert
+    $stmt = $conn->prepare("INSERT INTO items (title, category, stock, buying_price, selling_price, added_by) 
+            VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssiddi", $title, $category, $stock, $buy, $sell, $added_by);
+    
+    if ($stmt->execute()) {
         $success_message = "Product added successfully!";
     } else {
-        $error_message = "Error: " . mysqli_error($conn);
+        $error_message = "Error: " . $stmt->error;
     }
+    $stmt->close();
 }
 
 include 'sidebar.php'; 
@@ -47,19 +54,19 @@ include 'sidebar.php';
         <div class="date"><?php echo date("F d, Y, g:i a"); ?></div>
         <div class="user">
             <i class="fas fa-user-circle"></i>
-            <span><?php echo $_SESSION['username']; ?></span>
+            <span><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
     </div>
 
     <?php if ($success_message): ?>
         <div class="success-message">
-            <?php echo $success_message; ?>
+            <?php echo htmlspecialchars($success_message, ENT_QUOTES, 'UTF-8'); ?>
         </div>
     <?php endif; ?>
 
     <?php if ($error_message): ?>
         <div class="error-message">
-            <?php echo $error_message; ?>
+            <?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?>
         </div>
     <?php endif; ?>
 
@@ -76,7 +83,9 @@ include 'sidebar.php';
             <select id="category" name="category" required>
                 <option value="">-- Select Category --</option>
                 <?php while ($row = mysqli_fetch_assoc($categories)) { ?>
-                    <option value="<?= $row['category_name']; ?>"><?= $row['category_name']; ?></option>
+                    <option value="<?= htmlspecialchars($row['category_name'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <?= htmlspecialchars($row['category_name'], ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
                 <?php } ?>
             </select>
         </div>

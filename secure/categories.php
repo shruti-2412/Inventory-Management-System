@@ -11,21 +11,33 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['category_name'])) {
-    $name = $_POST['category_name'];
-    if ($conn->query("INSERT INTO categories (category_name) VALUES ('$name')")) {
+    $name = mysqli_real_escape_string($conn, $_POST['category_name']);
+    
+    // Using prepared statement for insert
+    $stmt = $conn->prepare("INSERT INTO categories (category_name) VALUES (?)");
+    $stmt->bind_param("s", $name);
+    
+    if ($stmt->execute()) {
         $success_message = "Category added successfully!";
     } else {
-        $error_message = "Error: " . $conn->error;
+        $error_message = "Error: " . $stmt->error;
     }
+    $stmt->close();
 }
 
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    if ($conn->query("DELETE FROM categories WHERE id=$id")) {
+    $id = (int)$_GET['delete']; // Cast to integer for security
+    
+    // Using prepared statement for delete
+    $stmt = $conn->prepare("DELETE FROM categories WHERE id=?");
+    $stmt->bind_param("i", $id);
+    
+    if ($stmt->execute()) {
         $success_message = "Category deleted successfully!";
     } else {
-        $error_message = "Error: " . $conn->error;
+        $error_message = "Error: " . $stmt->error;
     }
+    $stmt->close();
 }
 
 $categories = $conn->query("SELECT * FROM categories");
@@ -42,19 +54,19 @@ include 'sidebar.php';
 
         <div class="user">
             <i class="fas fa-user-circle"></i>
-            <span><?php echo $_SESSION['username']; ?></span>
+            <span><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
     </div>
 
     <?php if ($success_message): ?>
         <div class="success-message">
-            <?php echo $success_message; ?>
+            <?php echo htmlspecialchars($success_message, ENT_QUOTES, 'UTF-8'); ?>
         </div>
     <?php endif; ?>
 
     <?php if ($error_message): ?>
         <div class="error-message">
-            <?php echo $error_message; ?>
+            <?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?>
         </div>
     <?php endif; ?>
 
@@ -86,7 +98,7 @@ include 'sidebar.php';
                 while ($row = $categories->fetch_assoc()) {
                     echo "<tr>
                         <td>{$i}</td>
-                        <td>{$row['category_name']}</td>
+                        <td>" . htmlspecialchars($row['category_name'], ENT_QUOTES, 'UTF-8') . "</td>
                         <td class='action-column'>
                             <a href='?delete={$row['id']}' class='action-btn delete-btn' onclick='return confirm(\"Are you sure you want to delete this category?\");'>
                                 <i class='fas fa-trash'></i>

@@ -8,15 +8,17 @@ if (isset($_SESSION['username'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-
-    // SQL Injection Vulnerability 
-    $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
-    $result = mysqli_query($conn, $sql);
-
-    if (mysqli_num_rows($result) == 1) {
-        $row = mysqli_fetch_assoc($result);
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = $_POST['password']; // We'll use prepared statements for more security
+    
+    // Using prepared statements to prevent SQL injection
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username=? AND password=?");
+    $stmt->bind_param("ss", $username, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows == 1) {
+        $row = $result->fetch_assoc();
         $_SESSION['username'] = $row['username'];
         $_SESSION['role'] = $row['role'];
         header("Location: dashboard.php");
@@ -24,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $error_message = "Invalid username or password!";
     }
+    $stmt->close();
 }
 ?>
 
@@ -44,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <?php if (isset($error_message)): ?>
                 <div class="error-message">
-                    <?php echo $error_message; ?>
+                    <?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?>
                 </div>
             <?php endif; ?>
             

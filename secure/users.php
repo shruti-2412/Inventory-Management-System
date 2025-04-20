@@ -21,7 +21,7 @@ include 'sidebar.php';
 
         <div class="user">
             <i class="fas fa-user-circle"></i>
-            <span><?php echo $_SESSION['username']; ?> (Admin)</span>
+            <span><?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?> (Admin)</span>
         </div>
     </div>
 
@@ -52,10 +52,10 @@ include 'sidebar.php';
 
                 echo "<tr>
                 <td>{$i}</td>
-                <td>{$row['username']}</td>
+                <td>" . htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8') . "</td>
                 <td>{$role_badge}</td>
                 <td class='action-column'>
-                    <a href='delete_user.php?id={$row['id']}' class='action-btn delete-btn' onclick='return confirm(\"Are you sure you want to delete this user?\");'>
+                    <a href='delete_user.php?id=" . (int)$row['id'] . "' class='action-btn delete-btn' onclick='return confirm(\"Are you sure you want to delete this user?\");'>
                         <i class='fas fa-trash'></i>
                     </a>
                 </td>
