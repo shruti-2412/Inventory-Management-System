@@ -7,6 +7,12 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
+// Get the logged-in user's ID
+$username = $_SESSION['username'];
+$user_query = mysqli_query($conn, "SELECT id FROM users WHERE username='$username'");
+$user_data = mysqli_fetch_assoc($user_query);
+$added_by = $user_data['id'];
+
 // Fetch categories from DB
 $categories = mysqli_query($conn, "SELECT * FROM categories");
 
@@ -20,8 +26,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $buy = $_POST['buy'];
     $sell = $_POST['sell'];
 
-    $sql = "INSERT INTO items (title, category, stock, buying_price, selling_price) 
-           VALUES ('$title', '$category', '$stock', '$buy', '$sell')";
+    $sql = "INSERT INTO items (title, category, stock, buying_price, selling_price, added_by) 
+            VALUES ('$title', '$category', '$stock', '$buy', '$sell', '$added_by')";
 
     if (mysqli_query($conn, $sql)) {
         $success_message = "Product added successfully!";

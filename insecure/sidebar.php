@@ -12,7 +12,7 @@
     <h2>INVENTORY SYSTEM</h2>
     <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
 
-
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
         <div class="menu-section">
             <a href="#"><i class="fas fa-user"></i> User Management</a>
             <div class="submenu">
@@ -20,7 +20,7 @@
                 <a href="users.php"><i class="fas fa-eye"></i> View Users</a>
             </div>
         </div>
-
+    <?php endif; ?>
 
     <a href="categories.php"><i class="fas fa-layer-group"></i> Categories</a>
 

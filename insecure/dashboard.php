@@ -1,7 +1,8 @@
 <?php
 include 'config.php';
-include 'sidebar.php';
 session_start();
+include 'sidebar.php';
+
 // Get number of users
 $userQuery = mysqli_query($conn, "SELECT COUNT(*) AS total_users FROM users");
 $userCount = mysqli_fetch_assoc($userQuery)['total_users'];
