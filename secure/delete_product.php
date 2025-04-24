@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 session_start();
+include 'session_check.php';
 
 if (!isset($_SESSION['username'])) {
     header("Location: index.php");

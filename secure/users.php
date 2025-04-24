@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 session_start();
+include 'session_check.php';
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
     echo "<script>alert('Access denied!'); window.location.href='dashboard.php';</script>";

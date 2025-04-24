@@ -1,6 +1,7 @@
 <?php
 include 'config.php';
 session_start();
+include 'session_check.php';
 include 'sidebar.php';
 
 // Get number of users

@@ -2,31 +2,39 @@
 include 'config.php';
 session_start();
 
-if (isset($_SESSION['username'])) {
-    header("Location: dashboard.php");
-    exit();
-}
+// Set no-cache headers
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// if (isset($_SESSION['username'])) {
+//     header("Location: dashboard.php");
+//     exit();
+// }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
-    $password = $_POST['password']; // We'll use prepared statements for more security
-    
-    // Using prepared statements to prevent SQL injection
-    $stmt = $conn->prepare("SELECT * FROM users WHERE username=? AND password=?");
-    $stmt->bind_param("ss", $username, $password);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows == 1) {
-        $row = $result->fetch_assoc();
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // SQL Injection Vulnerability 
+    $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) == 1) {
+        $row = mysqli_fetch_assoc($result);
         $_SESSION['username'] = $row['username'];
         $_SESSION['role'] = $row['role'];
+        $_SESSION['last_activity'] = time(); // Set initial activity time
         header("Location: dashboard.php");
         exit();
     } else {
         $error_message = "Invalid username or password!";
     }
-    $stmt->close();
+}
+
+// Check for timeout message
+if (isset($_GET['timeout'])) {
+    $timeout_message = "Your session has expired. Please log in again.";
 }
 ?>
 
@@ -47,7 +55,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <?php if (isset($error_message)): ?>
                 <div class="error-message">
-                    <?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo $error_message; ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($timeout_message)): ?>
+                <div class="error-message">
+                    <?php echo $timeout_message; ?>
                 </div>
             <?php endif; ?>
             
