@@ -7,11 +7,6 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-if ($_SESSION['role'] !== 'admin') {
-    echo "<script>alert('Access denied! Only admins can delete products.'); window.location.href='products.php';</script>";
-    exit();
-}
-
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
     
